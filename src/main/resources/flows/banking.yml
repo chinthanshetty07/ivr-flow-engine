@@ -1,0 +1,57 @@
+# A small banking IVR. Node types: prompt (play and go on), menu (collect one digit), lookup (call the
+# customer API), action (call the API to change something), transfer (to an agent queue), hangup.
+start: welcome
+nodes:
+  welcome:
+    type: prompt
+    say: "Welcome to Example Bank."
+    next: main_menu
+  main_menu:
+    type: menu
+    say: "For your account balance, press 1. To block a lost card, press 2. To speak to an agent, press 0."
+    options: { "1": balance, "2": block_confirm, "0": agent }
+    max-retries: 2
+    on-fail: agent
+  balance:
+    type: lookup
+    api: balance
+    say: "Your available balance is {balance} rupees."
+    next: after_service
+    on-error: api_down
+  block_confirm:
+    type: menu
+    say: "To block the card ending {cardLast4}, press 1. To go back, press 2."
+    options: { "1": block_card, "2": main_menu }
+    max-retries: 2
+    on-fail: agent
+    needs: card
+  block_card:
+    type: action
+    api: block-card
+    say: "Your card is blocked. A replacement will reach you in 7 working days."
+    next: after_service
+    on-error: api_down
+  after_service:
+    type: menu
+    say: "To go back to the main menu, press 1. To end the call, press 2."
+    options: { "1": main_menu, "2": goodbye }
+    max-retries: 1
+    on-fail: goodbye
+  api_down:
+    type: prompt
+    say: "Sorry, we can't fetch your details right now. Let me connect you to an agent."
+    next: agent
+  agent:
+    type: transfer
+    queue: support
+    after-hours: after_hours
+  after_hours:
+    type: prompt
+    say: "Our agents are available Monday to Saturday, 9 am to 6 pm. Please call back then. Goodbye."
+    next: hangup
+  goodbye:
+    type: prompt
+    say: "Thank you for calling Example Bank. Goodbye."
+    next: hangup
+  hangup:
+    type: hangup

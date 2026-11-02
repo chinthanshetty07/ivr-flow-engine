@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: ivr-flow-engine
+  # H2 in MySQL mode by default so it runs with no setup; point DB_URL at MySQL for a real deployment.
+  datasource:
+    url: ${DB_URL:jdbc:h2:mem:ivr;MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1}
+    username: ${DB_USER:sa}
+    password: ${DB_PASSWORD:}
+  flyway:
+    locations: classpath:db/migration
+
+ivr:
+  flow: classpath:flows/banking.yml
+  timezone: Asia/Kolkata
+  agent-hours:
+    days: [MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY]
+    open: "09:00"
+    close: "18:00"
+  customer-api:
+    base-url: ${CUSTOMER_API_URL:http://localhost:9090}
+    timeout-ms: 2000
